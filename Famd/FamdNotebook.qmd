@@ -1,0 +1,180 @@
+---
+title: "FAMD Notebook"
+format:
+   html:
+      toc: true
+      toc-location: left
+editor: visual
+---
+
+```{r setup, warning=FALSE, message=FALSE}
+# Clearing the workspace
+rm(list = ls())
+
+# Loading necessary libraries
+library(FactoMineR)
+library(factoextra)
+library(dplyr)
+library(ggplot2)
+```
+
+## Introduction
+
+This project focuses on applying Factorial Analysis of Mixed Data (FAMD) to the "adult" dataset from the UCI Machine Learning Repository. FAMD is a dimension reduction technique that allows for the simultaneous analysis of both quantitative and qualitative variables. The goal is to understand the relationships between variables and individuals by reducing the dataset's dimensionality while preserving as much of the variance as possible.
+
+FAMD (Factor Analysis of Mixed Data) is a dimensionality reduction technique designed for datasets with both quantitative and qualitative variables. It combines elements of PCA (for quantitative variables) and MCA (for qualitative variables) to capture and preserve the information structure from both types in a lower-dimensional space.
+
+The dataset used in this analysis is the "adult" dataset from the UCI Machine Learning Repository ([dataset](https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data)).
+
+## Dataset
+
+We will use the "adult" dataset from the UCI (University of California, Irvine) archive, which is commonly used in machine learning and statistics. This dataset is often applied in tasks such as income classification or prediction.
+
+```{r load_data}
+# Defining column names
+column_names <- c(
+   "age", "workclass", "fnlwgt", "education", "education_num", "marital_status", 
+   "occupation", "relationship", "race", "sex", "capital_gain", "capital_loss",
+   "hours_per_week", "native_country", "income"
+)
+
+# Loading the dataset
+url <- "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data"
+data_adult <- read.table(url, header = FALSE, sep = ",", col.names = column_names)
+
+# Creating a subset of the dataset
+df <- data_adult[, 1:15]
+head(df)
+```
+
+## Data Description
+
+This dataset contains demographic and occupational information on 30,162 individuals, divided into 14 variables such as age, work class, education level, marital status, occupation, and hours worked per week. Economic variables like capital gain/loss and country of origin are also included.
+
+## Data **Preprocessing**
+
+```{r}
+# Removing the redundant "education" variable, which is already encoded as "education_num"
+df <- df %>% select(-education)
+
+# Converting categorical variables to factors
+df$workclass <- as.factor(df$workclass)
+df$marital_status <- as.factor(df$marital_status)
+df$occupation <- as.factor(df$occupation)
+df$relationship <- as.factor(df$relationship)
+df$race <- as.factor(df$race)
+df$sex <- factor(df$sex)
+df$native_country <- as.factor(df$native_country)
+df$income <- factor(df$income)
+
+# Removing rows with "?" values in specific variables
+df <- df[!(grepl("\\?", df$workclass) | grepl("\\?", df$native_country) | grepl("\\?", df$occupation)), ]
+
+# Displaying the cleaned data
+head(df)
+summary(df)
+```
+
+In the cleaned dataset, we have:
+
+-   8 categorical variables (`workclass`, `marital_status`, `occupation`, `relationship`, `race`, `sex`, `native_country`, `income`)
+
+-   6 quantitative variables (`age`, `fnlwgt`, `education_num`, `capital_gain`, `capital_loss`, `hours_per_week`).
+
+## FAMD **Analysis**
+
+FAMD is designed for datasets with both quantitative and qualitative variables. This method helps capture the structure of information from both types in a reduced-dimensional space.
+
+```{r famd_execution}
+# Performing FAMD
+res.famd <- FAMD(df, graph = FALSE)
+print(res.famd)
+```
+
+### Eigenvalues and Scree Plot
+
+The eigenvalues explain the variance captured by each dimension. We visualize these with a Scree plot.
+
+```{r scree_plot}
+get_eigenvalue(res.famd)
+fviz_screeplot(res.famd)
+```
+
+### **Results of Quantitative Variables**
+
+We now examine the results for quantitative and qualitative variables.
+
+```{r famd_var_results}
+# Extracting variable results
+var <- get_famd_var(res.famd)
+head(var$coord)
+head(var$cos2)
+```
+
+### Plotting Quantitative and Qualitative Variables
+
+```{r plotting_variables}
+# Plotting quantitative variables
+fviz_famd_var(res.famd, "quanti", repel = TRUE, col.var = "black")
+
+# Plotting qualitative variables
+fviz_famd_var(res.famd, "quali", repel = TRUE, col.var = "red")
+```
+
+#### Interpretation of Quantitative Variables
+
+The plot illustrates the orientation of each numerical variable in the first two dimensions. Variables like `education_num` and `age` contribute primarily to Dimension 1, while others, such as `fnlwgt`, have distinct orientations, indicating unique contributions. The proximity between `capital_gain` and `capital_loss` suggests a potential relationship.
+
+#### Interpretation of Qualitative Variables
+
+For categorical variables, the plot shows the distribution of category levels across dimensions. Categories closer together share similar profiles. For example, `Male` and `Husband` are close, indicating an association. The `>50K` income category is near certain professions, suggesting higher income in these roles.
+
+## Contribution Analysis
+
+```{r contribution_analysis}
+# Contributions of quantitative variables
+head(var$contrib)
+
+# Plotting contributions with colors indicating contribution level
+fviz_famd_var(res.famd, "quanti", col.var = "contrib", gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), repel = TRUE)
+fviz_famd_var(res.famd, "quali", col.var = "contrib", gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"))
+```
+
+### Contributions to Dimensions 1 and 2
+
+```{r contributions_dim}
+# Contributions of variables to Dimension 1
+fviz_contrib(res.famd, "var", axes = 1)
+
+# Contributions of variables to Dimension 2
+fviz_contrib(res.famd, "var", axes = 2)
+```
+
+Based on the plots:
+
+-   The variables contributing most to Dimension 1 are `relationship`, `marital_status`, and `income`.
+
+-   The variables contributing most to Dimension 2 are `occupation`, `relationship`, and `sex`.
+
+## Position of All Variables
+
+The following plot shows the positions of both quantitative and qualitative variables in the two dimensions.
+
+```{r all_variables_position}
+fviz_famd_var(res.famd, repel = TRUE)
+```
+
+This plot indicates that variables such as `occupation`, `relationship`, and `marital_status` are significant in Dimension 2, while `income` and `hours_per_week` align more with Dimension 1.
+
+## Individual Coordinates
+
+The coordinates of individuals projected into the factorial space after FAMD.
+
+```{r individuals_coordinates}
+ind <- get_famd_ind(res.famd)
+head(ind$coord)
+```
+
+## Conclusion
+
+This FAMD analysis reveals insights into the relationships between demographic and economic variables in the dataset. Key findings include associations between demographic factors and income categories, as well as notable relationships between certain categorical variables.
