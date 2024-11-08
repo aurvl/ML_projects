@@ -1,4 +1,4 @@
-# House Prices Prediction
+# [House Prices Prediction](https://auradev.hashnode.dev/house-prices-prediction)
 
 #### Structure of the Housing directory
 ```
@@ -8,6 +8,7 @@ Housing/
   - housing.ipynb : Notebook Jupyter where analysis, visualisations and modelisations are realised.
   - module.py : Python file containing pipeline function for preprocessing
 ```
+Blog article link : [https://auradev.hashnode.dev/house-prices-prediction](https://auradev.hashnode.dev/house-prices-prediction)
 
 ### Project Description
 
