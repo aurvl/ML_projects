@@ -1,12 +1,13 @@
 # House Prices Prediction
 
-# Structure of the Housing directory
-- **Housing/**
-  - **Housing.md** : Documentation on the project
-  - **housing.csv** : The dataset
-  - **housing.ipynb** : Notebook Jupyter where analysis, visualisations and modelisations are realised.
-  - **module.py** : Python file containing pipeline function for preprocessing
-
+#### Structure of the Housing directory
+```
+Housing/
+  - Housing.md : Documentation on the project
+  - housing.csv : The dataset
+  - housing.ipynb : Notebook Jupyter where analysis, visualisations and modelisations are realised.
+  - module.py : Python file containing pipeline function for preprocessing
+```
 
 ### Project Description
 
