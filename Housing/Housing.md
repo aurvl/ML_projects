@@ -1,5 +1,13 @@
 # House Prices Prediction
 
+# Structure of the Housing directory
+- **Housing/**
+  - **Housing.md** : Documentation on the project
+  - **housing.csv** : The dataset
+  - **housing.ipynb** : Notebook Jupyter where analysis, visualisations and modelisations are realised.
+  - **module.py** : Python file containing pipeline function for preprocessing
+
+
 ### Project Description
 
 This project focuses on predicting house prices using a dataset with various features related to housing and demographic characteristics. The goal is to build and evaluate machine learning models to determine how well they can estimate house prices based on these attributes. The analysis includes data exploration, visualization, and model implementation to better understand the relationships between variables and their impact on housing prices.
