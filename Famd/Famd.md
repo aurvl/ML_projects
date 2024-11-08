@@ -5,6 +5,7 @@
 Famd/
   - Famd.md : Documentation on the project
   - famd.R : R script where analysis, visualisations and modelisations are realised.
+  - FamdNotebook.qmd : A Notebook version of the project.
 ```
 Notebook link : [https://aurvl.github.io/NotebookSites/famd/Famd.html](https://aurvl.github.io/NotebookSites/famd/Famd.html)
 
