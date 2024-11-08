@@ -1,2 +1,2 @@
 # Machine-Learning-projects
-Repository for ML-AI projects
+Repository for my ML-AI projects

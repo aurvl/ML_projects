@@ -1,37 +1,40 @@
-# House Price Prediction 🏠
+# House Prices Prediction
 
-## Description
-This project applies machine learning techniques to predict house prices based on a dataset containing various features related to housing and area demographics. The goal is to build a predictive model using linear regression and evaluate its performance in terms of how well it can estimate house prices. Additionally, we will explore the dataset through data visualization and analysis.
+### Project Description
 
-## Goals
-- **Data Exploration**: Analyze the dataset to understand the distribution of house prices and the relationships between different variables (e.g., area income, number of rooms).
-- **Data Visualization**: Create graphs such as histograms, scatter plots, and correlation heatmaps to visualize key insights.
-- **Model Building**: Build a machine learning model (linear regression) to predict house prices.
-- **Model Evaluation**: Evaluate the model's performance using metrics such as the R² score and compare predicted vs. actual house prices.
+This project focuses on predicting house prices using a dataset with various features related to housing and demographic characteristics. The goal is to build and evaluate machine learning models to determine how well they can estimate house prices based on these attributes. The analysis includes data exploration, visualization, and model implementation to better understand the relationships between variables and their impact on housing prices.
 
-## Dataset
-The dataset used for this analysis contains 5000 records with the following features:
-- **Avg. Area Income**: Average income of residents in the area.
-- **Avg. Area House Age**: Average age of the houses in the area.
-- **Avg. Area Number of Rooms**: Average number of rooms in the houses.
-- **Avg. Area Number of Bedrooms**: Average number of bedrooms in the houses.
+### Objectives
+- **Data Analysis**: Explore the dataset to understand the distribution of features such as income, house age, and population, and how they relate to house prices.
+- **Data Visualization**: Use visualizations (e.g., histograms, scatter plots, correlation matrices) to uncover patterns and correlations in the data.
+- **Model Implementation**: Implement and compare machine learning models (e.g., Linear Regression, K-Nearest Neighbors) for price prediction.
+- **Model Evaluation**: Assess model performance using metrics like MSE and R², providing insights into prediction accuracy and model fit.
+
+### Dataset
+The dataset includes 5000 records, each representing a house with the following features:
+- **Avg. Area Income**: Average income of area residents.
+- **Avg. Area House Age**: Average age of houses in the area.
+- **Avg. Area Number of Rooms**: Average number of rooms per house.
+- **Avg. Area Number of Bedrooms**: Average number of bedrooms per house.
 - **Area Population**: Population of the area.
-- **Price**: Price of the house (target variable).
+- **Price**: Sale price of the house (target variable).
 
-## Tools
+### Tools
 The analysis and modeling were performed using Python and the following libraries:
 - **pandas**: For data manipulation and exploration.
 - **seaborn**: For data visualization.
 - **matplotlib**: For plotting graphs and visualizations.
-- **scikit-learn**: For machine learning tasks such as scaling data, splitting datasets, and building the linear regression model.
+- **scikit-learn**: For machine learning tasks such as scaling data, handling missing values, splitting datasets, and building models.
 
-## Key Functions Used
+### Key Functions Used
 - `pd.read_csv()`: Load the dataset.
-- `sns.displot()`: Visualize the distribution of house prices.
-- `sns.scatterplot()`: Plot the relationships between variables.
+- `sns.histplot()`: Visualize the distribution of house prices and other features.
 - `sns.heatmap()`: Create a correlation matrix to show relationships between variables.
-- `train_test_split()`: Split the dataset into training and testing sets.
-- `LinearRegression()`: Build the linear regression model.
-- `r2_score()`: Evaluate the model’s performance using the R² metric.
+- `train_test_split()`: Split the dataset into training and testing sets for model evaluation.
+- `LinearRegression()`, `KNeighborsRegressor()`: Build and evaluate regression models.
+- `cross_val_score()`: Perform cross-validation to assess model performance.
+- `mean_squared_error()` and `r2_score()`: Evaluate model accuracy using MSE and R² metrics.
 
-For further details, please refer to the Jupyter Notebook provided in this repository ([`housing.ipynb`](/Housing/housing.ipynb)).
+This project aims to produce reliable and interpretable models to aid stakeholders in making informed decisions about real estate pricing and investments.
+
+For further details, please refer to the Jupyter Notebook provided in this repository ([housing.ipynb](/Housing/housing.ipynb))
