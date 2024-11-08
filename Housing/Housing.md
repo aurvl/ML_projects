@@ -11,7 +11,7 @@ This project focuses on predicting house prices using a dataset with various fea
 - **Model Evaluation**: Assess model performance using metrics like MSE and R², providing insights into prediction accuracy and model fit.
 
 ### Dataset
-The dataset includes 5000 records, each representing a house with the following features:
+The dataset (housing.csv) includes 5000 records, each representing a house with the following features:
 - **Avg. Area Income**: Average income of area residents.
 - **Avg. Area House Age**: Average age of houses in the area.
 - **Avg. Area Number of Rooms**: Average number of rooms per house.
@@ -37,4 +37,4 @@ The analysis and modeling were performed using Python and the following librarie
 
 This project aims to produce reliable and interpretable models to aid stakeholders in making informed decisions about real estate pricing and investments.
 
-For further details, please refer to the Jupyter Notebook provided in this repository ([housing.ipynb](/Housing/housing.ipynb))
+For further details, please refer to the Jupyter Notebook provided in this repository ([housing.ipynb](https://github.com/aurvl/ML_projects/blob/main/Housing/housing.ipynb))
