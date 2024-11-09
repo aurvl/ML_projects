@@ -3,10 +3,10 @@
 #### Structure of the Housing directory
 ```
 Housing/
-  - Housing.md : Documentation on the project
-  - housing.csv : The dataset
-  - housing.ipynb : Notebook Jupyter where analysis, visualisations and modelisations are realised.
-  - module.py : Python file containing pipeline function for preprocessing
+  |- Housing.md : Documentation on the project
+  |- housing.csv : The dataset
+  |- housing.ipynb : Notebook Jupyter where analysis, visualisations and modelisations are realised.
+  |- module.py : Python file containing pipeline function for preprocessing
 ```
 Blog article link : [https://auradev.hashnode.dev/house-prices-prediction](https://auradev.hashnode.dev/house-prices-prediction)
 
