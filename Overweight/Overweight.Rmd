@@ -1,0 +1,886 @@
+---
+title: "Overweight - Machine Learning Project"
+author: "Aurel VEHI"
+output:
+  html_document:
+    toc: true
+    fontsize: 11pt
+    css: style.css
+---
+
+------------------------------------------------------------------------
+
+# Introduction
+
+Overweight and obesity are conditions characterized by an excessive accumulation of body fat, posing health risks according to the World Health Organization ([WHO](https://www.who.int/fr/health-topics/obesity#tab=tab_1)). The WHO defines overweight as a body mass index (BMI) above 25 and obesity as a BMI exceeding 30. In 2019, the WHO reported that five million deaths from noncommunicable diseases were related to high BMI.
+
+Today, obesity prevails more than underweight, highlighting its importance in the context of malnutrition. Research ([Froguel, 2015](https://www.academie-medecine.fr/wp-content/uploads/2018/03/P.1269-1280.pdf)) highlights genetic factors predisposing certain individuals to obesity. If a person is obese or overweight, there are chances that this is related to family history. It is therefore logical that we focus our attention on examining the probability that individuals have family history related to obesity.
+
+Given this information, it is logical to explore the relationship between obesity and family history. Thus, our study aims to develop a machine learning model capable of predicting whether an individual has a family history of obesity based on various individual characteristics. In this Notebook, we are going to present the results of our study.
+
+The methodology of the study is based on supervised machine learning techniques. We will use several machine learning models, such as logistic regression, random forest classifier, neural networks, and XGBoost.
+
+The data used comes from the GitHub platform and includes various information about individuals.
+
+The Notebook is structured as follows:
+
+1.  **Exploratory Data Analysis**: Data analysis to understand its structure and characteristics.
+
+2.  **Data preprocessing**: Data preprocessing to prepare it for analysis.
+
+3.  **Data splitting**: Division of the dataset into training and testing sets to evaluate model performance.
+
+4.  **Implementing machine learning algorithms**: Implementation of machine learning algorithms to build predictive models from training data.
+
+5.  **Interpretation of results**: Where we will summarize the work done.
+
+The study was carried out using the RStudio programming software, which provides a good working environment.
+
+## Installing and loading packages
+
+```{r, echo=FALSE}
+rm(list = ls())
+```
+
+To carry out this study, we need R resources that we select and install. These are the resources (packages) that we will need for our analysis.
+
+```{r, message=FALSE, warning=FALSE}
+# install.packages("dplyr")
+# install.packages("ggplot2")
+# install.packages("tidyr")
+# install.packages("readr")
+# install.packages("data.table")
+# install.packages("stringr")
+# install.packages("lubridate")
+# install.packages("shiny")
+# install.packages("gridExtra")
+# install.packages("corrplot")
+# install.packages("caret")
+# install.packages("caTools")
+# install.packages("xgboost")
+# install.packages("randomForest")
+# install.packages("neuralnet")
+# install.packages("keras")
+# install.packages("xgboost")
+# install.packages("devtools")
+# install.packages("NeuralNetTools")
+
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(readr)
+library(data.table)
+library(stringr)
+library(shiny)
+library(gridExtra)
+library(corrplot)
+library(caret)
+library(caTools)
+library(xgboost)
+library(randomForest)
+library(neuralnet)
+library(keras)
+library(xgboost)
+library(devtools)
+library(NeuralNetTools)
+```
+
+Now that the packages are installed, we can start the work.
+
+------------------------------------------------------------------------
+
+# 1. Exploratory Data Analysis
+
+We load the dataset via the GitHub link into a dataframe named "data" and we take a quick look at its first few rows.
+
+```{r}
+data <- read.csv("https://github.com/Eben2020-hp/Obesity/raw/main/Obesity.csv")
+head(data[, 1:8]) # Preview of the 8 first variables of the dataset
+```
+
+**Observation of the dataframe**
+
+We notice that we have a mixture of numeric and categorical data types. This section will be devoted to exploring the data, and initially, let's quickly perform some simple checks of data completeness to see if there are any null or outlier values.
+
+## 1.1. Variables of the dataframe:
+
+```{r}
+glimpse(data)
+```
+
+The dataframe is of size (2111 ; 17), which means it consists of 2111 rows (individuals) and contains 17 variables. The variables are:
+
+-   Gender: Gender
+
+-   Age: Age
+
+-   Height: Height in meters
+
+-   Weight: Weight in kg
+
+-   family_history_with_overweight: Indicates if the person has a family history of overweight
+
+-   FAVC: Indicates if the person tends to eat high-calorie food
+
+-   FCVC: Fruit and vegetable consumption
+
+-   NCP: Number of main meals consumed per day
+
+-   CAEC: Frequency of food consumption between main meals
+
+-   SMOKE: Indicates if the person smokes or not
+
+-   CH2O: Daily water intake
+
+-   SCC: Indicates if the person follows a strict diet
+
+-   FAF: Frequency of physical activities
+
+-   TUE: Time spent in front of a screen
+
+-   CALC: Frequency of alcoholic beverage consumption
+
+-   MTRANS: Main means of transportation used
+
+-   NObeyesdad: Obesity level
+
+As one might expect, the target column for which our model training will focus on is the **"family_history_with_overweight"** column (indicator of family history of overweight). It is a dummy variable that indicates:
+
+-   Yes: if the person has a family history of overweight
+
+-   No: if the person has no family history of overweight
+
+## 1.2. Quality of the data:
+
+We use the `is.na()` function to retrieve N/A values and evaluate their significance level in the dataframe.
+
+```{r}
+colSums(is.na(data)) > 0
+```
+
+We notice that there are no missing values in our dataframe. It is of fairly good quality.
+
+## 1.3. Distribution of variables:
+
+To get a first idea of the distribution of our variables and understand what they might reveal, we will plot graphs on certain variables. These graphs consist of scatter plots for numerical variables, bar charts for categorical variables, and other appropriate visualizations depending on the characteristics of each variable. This visual exploration step will help us detect trends, potential outliers, as well as patterns or correlations between variables.
+
+```{r, echo=FALSE}
+p1 <- ggplot(data, aes(x = Age, y = Weight)) + geom_point(col = "black") + labs(title = "Age vs Weight") +
+  theme(axis.text = element_text(size = 4), axis.title = element_text(size = 6))
+
+p2 <- ggplot(data, aes(x = Gender, y = Weight)) + geom_point(col = "#C40C0C") +  labs(title = "Gender vs Weight") +
+  theme(axis.text = element_text(size = 4), axis.title = element_text(size = 6))
+
+p3 <- ggplot(data, aes(x = Weight, y = Height)) + geom_point(col = "#8576FF") +  labs(title = "Weight vs Height") +
+  theme(axis.text = element_text(size = 4), axis.title = element_text(size = 6))
+
+p4 <- ggplot(data, aes(x = Age, y = FCVC)) + geom_point(col = "#4793AF") +  labs(title = "Age vs Fruits consumption") +
+  theme(axis.text = element_text(size = 4), axis.title = element_text(size = 6))
+
+p5 <- ggplot(data, aes(x = Weight, y = FCVC)) + geom_point(col = "#FF76CE") +  labs(title = "Weight vs Fruits consumption") +
+  theme(axis.text = element_text(size = 4), axis.title = element_text(size = 6))
+
+p6 <- ggplot(data, aes(x = Age, y = CH2O)) + geom_point(col = "#7ABA78") +  labs(title = "Age vs Water consumption") + theme(axis.text = element_text(size = 4), axis.title = element_text(size = 6))
+
+p7 <- ggplot(data, aes(x = Weight, y = SMOKE)) + geom_point(col = "#FF6500") +  labs(title = "Weight vs Smoke") +
+  theme(axis.text = element_text(size = 4), axis.title = element_text(size = 6))
+
+p8 <- ggplot(data, aes(x = Weight, y = CALC)) + geom_point(col = "#FF76CE") +  labs(title = "Weight vs CALC") + theme(axis.text = element_text(size = 4), axis.title = element_text(size = 6))
+
+grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, ncol = 4)
+```
+
+```{r, echo=FALSE}
+data %>% ggplot(mapping = aes(x = Age, y = Weight, color = NObeyesdad)) + # More details on age vs weight
+  geom_point() + theme_bw() + theme(legend.position = "bottom") +
+  labs(title = "Age vs Weight", subtitle = "By Obesity level")
+```
+
+Note that:
+
+-   **AGE vs WEIGHT**: There is a wide range of weights across all ages, indicating no specific age group is predominantly associated with a particular weight range. This suggests that factors other than age might have a stronger influence on weight.
+
+-   **WEIGHT vs GENDER**: The weight distribution for both males and females varies significantly, with females generally exhibiting a broader range of weights. This could imply that gender may play a role in weight variability.
+
+-   **WEIGHT vs HEIGHT**: There is a positive correlation, indicating that taller individuals tend to weigh more. This aligns with general biological expectations where height and weight are proportionately related.
+
+-   **WEIGHT vs ALCOHOL**: There are more people over 120kg among those who consume alcohol frequently.
+
+```{r, echo=FALSE}
+ggplot(data, aes(x = Age, y = NObeyesdad)) + geom_point(col = "#C40C0C") + labs(title = "Age vs NObeyesdad") +
+  theme(axis.text = element_text(size = 8), axis.title = element_text(size = 6))
+```
+
+The plot displays the relationship between `AGE` and `NObeyesdad`, categorizing individuals into different weight statuses: Insufficient_Weight, Normal_Weight, Overweight_Level_I, Overweight_Level_II, Obesity_Type_I, Obesity_Type_II, and Obesity_Type_III.
+
+-   **Weight Status Trends**:
+
+    -   **Insufficient_Weight and Normal_Weight**: These categories are denser at younger ages (\< 25), suggesting that younger individuals are more likely to have insufficient or normal weight.
+
+    -   **Overweight and Obesity Levels:** As age increases, there is a notable presence of individuals in Overweight_Level_I, Overweight_Level_II, and the various Obesity categories. This indicates that the likelihood of being overweight or obese increases with age.
+
+    -   **Clustering Patterns:** The clustering of data points within each weight category suggests that age significantly impacts weight status, with older individuals more commonly found in higher weight categories.
+
+```{r, echo=FALSE}
+ggplot(data, aes(x = Weight, y = family_history_with_overweight)) + geom_point(col = "black") + labs(title = "Weight vs family history with overweight") +
+  theme(axis.text = element_text(size = 8), axis.title = element_text(size = 6))
+```
+
+The plot shows the relationship between weight and family history of being overweight.
+
+-   **Weight Trends:**
+
+    -   Individuals with a family history of being overweight (`yes`) are distributed across a wide range of weights, including higher weights. This suggests that a family history of being overweight might be associated with a higher weight.
+
+    -   Individuals without a family history of being overweight (`no`) also show a wide distribution of weights, but there are fewer individuals at the higher end of the weight spectrum compared to those with a family history of being overweight.
+
+------------------------------------------------------------------------
+
+## 1.4. Correlation of features:
+
+Analyzing the correlation of features is a crucial step in data exploration, as it allows us to discover relationships and interactions between different variables in our dataset. Understanding these relationships can provide valuable insights for several aspects of our analysis.
+
+To do this, we use the `corrplot()` function from the `corrplot` package to plot the correlation matrix.
+
+```{r}
+X <- data %>%
+  select(Age, Height, Weight, FCVC, NCP, CH2O, FAF, TUE) # We select only numerical variables
+
+cor_mat <- cor(X) # Computing the correlation matrix of X
+corrplot(cor_mat, method = "color",col = COL2('PuOr'), tl.col ="black", tl.cex = 0.5) # And plot the correlation matrix
+```
+
+From the corrplot, we can see that quite a lot of our columns seem to be poorly correlated with one another. Generally when making a predictive model, it would be preferable to train a model with features that are not too correlated with one another feature.
+
+------------------------------------------------------------------------
+
+# 2. Data preprocessing
+
+After a brief exploration of our dataframe, we proceed to data preprocessing. This phase includes several important tasks that optimize the quality and consistency of our data, improving the performance of our models and the reliability of our results.
+
+First, we group each type of variable (numerical, dummy, categorical) into 3 distinct dataframes to process them separately.
+
+-   **Numerical variables**:
+
+```{r}
+X1 <- data %>%
+  select(Age, Height, Weight, FCVC, NCP, CH2O, FAF, TUE) # X1 contains numerical variables
+head(X1)
+```
+
+-   **Categorical variables**:
+
+We select only categorical variables with more than 2 modalities.
+
+```{r}
+X2 <- data.frame() # We create an empty df for storing categorical variables
+
+cat_cols <- c()
+for (col in names(data)) {
+  if (is.character(data[[col]])) {
+    cat_cols <- c(cat_cols, col) # loop for finding the categorical variables
+  }
+}
+print(cat_cols) # Only CAEC, CALC, MTRANS, and NObeyesdad have more than 2 levels
+
+X2 <- data %>%
+  select(CAEC, CALC, MTRANS, NObeyesdad) # We store them in X2
+```
+
+Next, we convert these variables into categorical to easily encode them into dummies. To transform them into dummies, we create dummy variables for each of their modalities.
+
+```{r}
+# Converting them into categoricals (factor)
+X2$CAEC <- factor(X2$CAEC)
+X2$CALC <- factor(X2$CALC)
+X2$MTRANS <- factor(X2$MTRANS)
+X2$NObeyesdad <- factor(X2$NObeyesdad)
+
+# And we create dummies for each categorical variable
+X2 <- model.matrix(~ . - 1, data = X2)
+X2 <- as.data.frame(X2)
+head(X2[, 1:6]) # Preview the 6 first columns
+```
+
+-   **Dummy variables**:
+
+```{r}
+# Renaming the target variable to simplify our task
+data <- data %>% 
+  rename(fhwo = family_history_with_overweight)
+```
+
+Next, we select the dummy variables from the global dataframe and store them in a special dataframe.
+
+```{r}
+X3 <- data %>%
+  select(fhwo, Gender, FAVC, SMOKE, SCC)
+
+X3$Gender <- factor(X3$Gender)
+X3$FAVC <- factor(X3$FAVC)
+X3$SMOKE <- factor(X3$SMOKE)
+X3$SCC <- factor(X3$SCC)
+
+X3 <- X3 %>%
+  mutate(fhwo = ifelse(fhwo == "yes", 1, 0),
+         Gender = ifelse(Gender == "Female", 1, 0),
+         FAVC = ifelse(FAVC == "yes", 1, 0),
+         SMOKE = ifelse(SMOKE == "yes", 1, 0),
+         SCC = ifelse(SCC == "yes", 1, 0))
+
+X3$fhwo <- factor(X3$fhwo) # We convert the target variable to factor (dummy)
+
+head(X3)
+```
+
+Finally, we combine the 3 dataframes using the `cbind()` function to create `data_final`, which will be the dataframe used for our analysis.
+
+```{r}
+attach(data)
+data_final <- cbind(X1, X3, X2) # Combining all df & the target variable to create the final one
+head(data_final[, 1:14]) # preview the first observations of the first columns of our final dataset
+```
+
+**Description of the new dataframe**
+
+```{r}
+dim(data_final)
+```
+
+It is a dataframe of size (2111, 30). It now contains 30 variables.
+
+**Target variable**
+
+```{r, message=FALSE, warning=FALSE}
+proportions(summary(data_final$fhwo)) # Proportions in the target variable
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data_final, aes(x = fhwo)) +
+  geom_bar(stat = "count", fill = c("#F27BBD", "#10439F"), color = "white") + # Plotting the target variable
+  labs(title = "Distribution of family_history_with_overweight", 
+       y = "Number of people") +
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5)) +
+  geom_text(aes(label = ..count.., y = ..count..), 
+            stat = "count", 
+            position = position_dodge(width = 0.9), 
+            vjust = -0.25, size = 3, fontface = "bold", color = "black") +
+  scale_fill_brewer(palette = "Set3")
+```
+
+The target variable shows some asymmetry in its distribution, as can be seen above.
+
+Therefore, it would be advisable to perform oversampling methods on our dataframe before starting the analysis.
+
+------------------------------------------------------------------------
+
+# 3. Data splitting
+
+As mentioned, we will first perform oversampling of our data before splitting them.
+
+## 3.1. Oversampled Dataset
+
+For oversampling, we will use the Synthetic Minority Oversampling Technique (SMOTE) method from the `DMwR` package.
+
+First, we install the necessary packages:
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+remotes::install_github("cran/DMwR")
+library(DMwR)
+```
+
+Then, we perform oversampling using the `SMOTE()` function from this package, and we store the new dataframe in `ovs_data`.
+
+```{r, message=FALSE, warning=FALSE}
+set.seed(123)
+ovs_data <- SMOTE(fhwo ~ ., data = data_final) # New oversampled dataset
+attach(ovs_data)
+```
+
+**Graph**
+
+Next, we observe our data again:
+
+```{r, echo=FALSE}
+ggplot(ovs_data, aes(x = fhwo)) +
+  geom_bar(stat = "count", fill = c("#F27BBD", "#10439F"), color = "white") +
+  labs(title = "Distribution of family_history_with_overweight", 
+       y = "Number of people") +
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5)) +
+  geom_text(aes(label = ..count.., y = ..count..), 
+            stat = "count", 
+            position = position_dodge(width = 0.9), 
+            vjust = -0.25, size = 3, fontface = "bold", color = "black") +
+  scale_fill_brewer(palette = "Set3")
+```
+
+Here we can observe that the distribution is less imbalanced than before, which is conducive to our analysis.
+
+## 3.2. Splitting into two sets
+
+In this part, we will split our dataset using the `createDataPartition()` function with an 80% ratio. That means:
+
+-   80% of the data will be used for model training
+
+-   The remaining 20% will be reserved for model evaluation
+
+This division will allow us to evaluate the model's performance on independent data, i.e., data that the model has not seen during training.
+
+```{r}
+inTraining <- createDataPartition(ovs_data$fhwo, p = .80, list = FALSE)
+train_set <- ovs_data[inTraining, ]
+test_set  <- ovs_data[- inTraining, ]
+```
+
+```{r}
+dim(train_set)
+table(train_set$fhwo)
+```
+
+The training set is of size (1232, 30) with a fairly balanced distribution of the target variable.
+
+Our data has been successfully split, it is time to build our models.
+
+------------------------------------------------------------------------
+
+# 4. Implementing machine learning algorithms
+
+As indicated in the introduction of this notebook, we aim to predict the `fhwo` variable, which indicates whether a person has a family history of overweight. This variable is binary, so we need to use supervised machine learning models of the classification type.
+
+With this in mind, we have chosen to evaluate and contrast the performance of 4 different classification models: *logistic regression, Random Forest Classifier, and Neural Network*. These models will be used to predict our target variable. Each model was trained on the training dataset and evaluated on the test dataset using metrics such as accuracy, precision, recall, F1-score, etc. These metrics will provide a comprehensive assessment of the model's performance in predicting our target variable.
+
+------------------------------------------------------------------------
+
+## 4.1. Logistic regression
+
+Logistic regression is a machine learning model used for binary classification. Despite its name, it is used to predict the probability that an observation belongs to a particular class based on explanatory variables. It is based on the logistic function to estimate probabilities and can be regularized to avoid overfitting.
+
+### a) Training the model
+
+We will train our logistic regression model on the entire training set:
+
+```{r, message=FALSE, warning=FALSE}
+set.seed(123)
+model_logit <- train(fhwo ~ ., data = train_set, method = "glm", family = "binomial")
+summary(model_logit)
+```
+
+The logistic regression model shows the estimated coefficients for each feature.
+
+-   **Age**: Older age is associated with lower odds of having a family history of overweight.
+
+-   **Weight**: Higher weight is associated with higher odds of having a family history of overweight.
+
+-   **Gender**: Being female is associated with higher odds of having a family history of overweight compared to being male.
+
+-   **FAVC (Frequency of consuming high-calorie food)**: Frequent consumption of high-calorie food is associated with higher odds of having a family history of overweight.
+
+-   **SMOKE (Smoking)**: Smoking is associated with higher odds of having a family history of overweight.
+
+-   **SCC (Calories consumption monitoring)**: Monitoring calorie consumption is associated with lower odds of having a family history of overweight.
+
+### b) Predictions
+
+```{r}
+reg_class <- predict(model_logit, test_set)
+```
+
+```{r}
+final_dataset <- cbind(Real = test_set$fhwo, Predicted = reg_class)
+final_dataset <- as.data.frame(final_dataset)
+head(final_dataset)
+```
+
+### c) Performance Evaluation
+
+-   **Confusion Matrix**
+
+```{r}
+conf_matrix1 <- confusionMatrix(reg_class, test_set$fhwo)
+print(conf_matrix1)
+```
+
+**Confusion Matrix**: The model correctly predicted 196 instances with no family history of overweight and 264 instances with a family history of overweight. It misclassified 44 instances as negative when they were positive and 35 instances as positive when they were negative.
+
+**Accuracy**: The model's overall accuracy is 85.34%, indicating it correctly classified 85.34% of instances.
+
+```{r, echo = FALSE}
+accuracy1 <- conf_matrix1$overall['Accuracy']
+```
+
+**Sensitivity**: The model correctly identified 84.85% of instances with a family history of overweight.
+
+**Specificity**: The model correctly identified 85.71% of instances without a family history of overweight.
+
+**Precision**: Among instances predicted as positive, 81.67% actually had a family history of overweight.
+
+**Kappa**: The model shows substantial agreement beyond chance (Kappa = 70.22%).
+
+In summary, the logit model performs well in predicting the target variable, but there's room for improvement in reducing misclassifications.
+
+-   **Precision**
+
+```{r}
+precision1 <- conf_matrix1$byClass["Pos Pred Value"]
+print(precision1)
+```
+
+-   **Recall**
+
+```{r}
+recall1 <- conf_matrix1$byClass["Sensitivity"]
+print(recall1)
+```
+
+-   **F1-score**
+
+```{r}
+f1_score1 <- 2 * (precision1 * recall1) / (precision1 + recall1)
+print(f1_score1)
+```
+
+-   **AUC-ROC**
+
+To plot the AUC-ROC, we need the `pROC` package:
+
+```{r message=FALSE, warning=FALSE}
+library(pROC)
+```
+
+```{r message=FALSE, warning=FALSE}
+auc1 <- roc(test_set$fhwo, as.numeric(reg_class))
+print(auc1$auc)
+```
+
+### d) Summary
+
+**Precision**: Out of all instances predicted as having a family history of overweight, 81.67% actually had a family history of overweight. This indicates the proportion of true positive predictions among all positive predictions made by the model.
+
+**Recall (Sensitivity)**: The model correctly identified 84.85% of all instances with a family history of overweight. This metric shows the model's ability to capture instances with a family history of overweight among all instances that actually have a family history of overweight.
+
+**F1-score**: The harmonic mean of precision and recall, providing a balance between the two metrics. An F1-score of 83.23% indicates a good balance between precision and recall.
+
+**AUC-ROC (Area Under the ROC Curve)**: The AUC-ROC score represents the model's ability to discriminate between positive and negative instances across all possible thresholds. An AUC-ROC score of 85.28% suggests that the model performs well in distinguishing between instances with and without a family history of overweight.
+
+Overall, these metrics indicate that the model has a relatively high ability to correctly identify instances with a family history of overweight while maintaining a low false positive rate.
+
+------------------------------------------------------------------------
+
+## 4.2. Random Forest classifier
+
+Random Forest is a machine learning algorithm that combines multiple decision trees to perform classification. Each decision tree is trained on a random subset of the data and uses a random subset of features to make decisions. The final prediction is based on a majority vote of the individual tree predictions.
+
+For RF, we will split our initial datasets into two:
+
+-   One set for features (`features_train`, `features_test`)
+
+-   One set for the target (`target_train`, `target_test`)
+
+```{r}
+target_train <- train_set$fhwo
+features_train <- train_set[-9]
+
+target_test <- test_set$fhwo
+features_test <- test_set[-9]
+```
+
+### a) Training the model
+
+With these two sets, we train our RF model:
+
+```{r message=FALSE, warning=FALSE}
+# Training the model
+set.seed(123)
+classifier_RF = randomForest(x = features_train, y = target_train, ntree = 500) 
+classifier_RF
+```
+
+-   **Interpretation of the Random Forest classifier:**
+
+Number of Trees: The model consists of 500 decision trees.
+
+Type of Random Forest: It is a classification random forest, meaning it is used for classification tasks.
+
+Variables at Each Split: At each split in the decision trees, the algorithm tried 5 randomly selected variables.
+
+-   **Plotting the model**
+
+```{r}
+plot(classifier_RF, main = 'RF Classifier')
+```
+
+This graph shows the error rate of a Random Forest (RF) classifier as a function of the number of trees.
+
+The error rate decreases rapidly as the number of trees increases initially, then tends to stabilize.
+
+**Class-specific Errors**:
+
+-   The red curve shows that for the hardest class to classify, the error rate remains relatively high compared to other classes, although it decreases slightly as the number of trees increases.
+
+-   The green curve shows a very low error rate from the beginning, indicating that this class is easily classified by the model.
+
+**Stabilization**:
+
+-   The average error (black curve) seems to stabilize around 0.04 after about 100 trees. This suggests that adding more trees beyond this point provides minimal improvement in reducing the average error.
+
+-   The hardest class (red curve) stabilizes its error around 0.12 after about 100 trees.
+
+-   The easiest class (green curve) stabilizes its error around 0.02 very quickly.
+
+<!-- -->
+
+-   *Model Efficiency*: The model performs well as the average error remains low after a certain number of trees.
+
+-   *Class Complexity*: There is a significant difference in the model's ability to classify different classes, as shown by the gap between the red and green curves.
+
+-   *Optimal Number of Trees*: Most of the benefit in terms of error reduction occurs before the number of trees reaches 100. Adding more trees beyond this point has a marginal impact on overall performance improvement.
+
+This type of graph is useful for determining the optimal number of trees to use in a random forest model to balance performance and computational resources.
+
+### b) Feaures Importance
+
+```{r}
+importance(classifier_RF)
+```
+
+The higher the Mean Decrease Gini value for a feature, the more important that feature is for the classification.
+
+*Height, Weight, NCP, CH2O, FAF, TUE*: These features have relatively high Mean Decrease Gini values, indicating they are important predictors for determining the presence of a family history of overweight.
+
+*FAVC* (Frequency of consumption of high caloric food): This feature also has a relatively high Mean Decrease Gini value, suggesting it plays a significant role in classification.
+
+*CAECSometimes, CALCFrequently, CALCno, CALCSometimes*: These features have moderate Mean Decrease Gini values, indicating they contribute to the model's predictive power but to a lesser extent compared to others.
+
+*SMOKE, MTRANSBike, MTRANSMotorbike*: These features have low Mean Decrease Gini values, suggesting they have less impact on classification.
+
+Overall, the Mean Decrease Gini values provide insights into the relative importance of each feature in the Random Forest classifier.
+
+-   **Variable importance plot**
+
+We can visualize the importance of the 10 first features :
+
+```{r}
+varImpPlot(classifier_RF, n.var = 10, main = "Random Forest Feature Importance", col = "#9365DB", pch = 16)
+```
+
+We can also observe the relationship between the `Weight` variable and the prediction
+
+```{r}
+partialPlot(classifier_RF, train_set, Weight)
+```
+
+### c) Predictions & Performance evaluation
+
+We evaluate the performance of the model by predicting the `target_test` set using the `features_test`.
+
+```{r}
+# Predicting the Test set results 
+RF_class = predict(classifier_RF, newdata = features_test, )
+```
+
+-   **Confusion Matrix**
+
+```{r}
+conf_matrix2 <- confusionMatrix(RF_class, target_test)
+conf_matrix2
+```
+
+The confusion matrix indicates the model's classification results, distinguishing between true positives (214), false positives (13), false negatives (17), and true negatives (295). These metrics are fundamental in evaluating the classifier's efficacy in distinguishing between classes.
+
+The overall accuracy of the model stands at an impressive 94.43%, suggesting a high level of correctness in its predictions. Furthermore, the 95% confidence interval, ranging from 92.15% to 96.21%, underscores the reliability of this accuracy estimate.
+
+Comparing the model's performance against a baseline, represented by the No Information Rate (NIR) of 57.14%, reveals a significant improvement, as evidenced by a p-value of less than 2e-16. The Kappa statistic, a measure of agreement between observed and expected accuracy, attains a value of 0.8861, indicating substantial concordance.
+
+Additional metrics such as sensitivity (92.64%) and specificity (95.78%) provide insights into the model's ability to correctly identify positive and negative instances, respectively. The positive predictive value (PPV) and negative predictive value (NPV) stand at 94.27% and 94.55%, respectively, further demonstrating the model's reliability in making correct classifications across different classes.
+
+With a prevalence rate of 42.86%, the model achieves a detection rate of 39.70% and a detection prevalence of 42.12%. These metrics shed light on the model's ability to detect instances of interest within the dataset.
+
+In summary, the balanced accuracy of 94.21% and the comprehensive array of metrics presented in the confusion matrix highlight the robustness and effectiveness of the classifier model in accurately classifying instances within the dataset.
+
+-   **AUC-ROC**
+
+The AUC-ROC of the model is:
+
+```{r}
+auc2 <- roc(target_test, as.numeric(RF_class))
+auc2 <- auc2$auc
+auc2
+```
+
+------------------------------------------------------------------------
+
+## 4.3. XGBoost Classifier
+
+XGBoost (Extreme Gradient Boosting) is an optimized distributed gradient boosting library designed to be highly efficient, flexible, and portable. It implements machine learning algorithms under the Gradient Boosting framework.
+
+### a) Training the XGBoost Model
+
+First, convert the datasets to matrices because the `xgb.train()` function from the `xgboost` package uses matrices to train the model:
+
+```{r}
+# Convert training and test features to matrix
+ft_train_mtx <- data.matrix(features_train)
+ft_test_mtx <- data.matrix(features_test)
+
+# Create DMatrix objects for training and testing sets
+xgb_train <- xgb.DMatrix(data = ft_train_mtx, label = target_train)
+xgb_test <- xgb.DMatrix(data = ft_test_mtx, label = target_test)
+```
+
+Next, train the XGBoost model:
+
+```{r}
+# Train the XGBoost model
+xgb_model <- xgb.train(data = xgb_train, max.depth = 3, nrounds = 50)
+summary(xgb_model)
+```
+
+-   **XGBoost Feature Importances**
+
+```{r}
+# Get feature importances from the model
+importance_matrix <- xgb.importance(feature_names = colnames(ft_train_mtx), model = xgb_model)
+importance_matrix
+```
+
+**Most Important Feature**: `Weight` is the top feature across gain and frequency metrics.
+
+**Wide Impact Feature**: `Age` covers the largest proportion of data, making it broadly influential. Diverse Impact: Features like `NObeyesdadNormal_Weight`, `FAVC`, and `Height` also significantly contribute but to a lesser extent than `Weight`.
+
+**Less Important Features**: Some features have minimal contributions, suggesting they might be less relevant for this particular model or dataset.
+
+Overall, this table helps identify which features are most influential in the model’s decision-making process, guiding potential areas for further analysis or feature engineering.
+
+**XGB Feature Importances Plot**
+
+```{r}
+# Plot the feature importances
+xgb.plot.importance(importance_matrix, left_margin = 8, main = 'XGBoost Feature Importances')
+```
+
+### b) Predictions
+
+Generate predictions on the test set:
+
+```{r}
+# Predict the test set
+xgb_class <- predict(xgb_model, ft_test_mtx)
+xgb_class_df <- data.frame(Predicted = ifelse(xgb_class >= 0.5, 1, 0), Real = target_test)
+
+# Display the first few rows of predictions vs. real values
+head(xgb_class_df)
+```
+
+### c) Accuracy and Confusion Matrix
+
+Compute the confusion matrix and calculate the accuracy:
+
+```{r, message=FALSE, warning=FALSE}
+# Compute the confusion matrix
+conf_matrix3 <- confusionMatrix(as.factor(xgb_class_df$Predicted), as.factor(xgb_class_df$Real))
+conf_matrix3
+```
+
+```{r}
+# Print accuracy
+accuracy3 <- conf_matrix3$overall['Accuracy']
+accuracy3
+```
+
+```{r}
+precision3 <- conf_matrix3$byClass["Pos Pred Value"]
+```
+
+```{r}
+recall3 <- conf_matrix3$byClass["Sensitivity"]
+recall3
+```
+
+```{r}
+f1_score3 <- 2 * (precision3 * recall3) / (precision3 + recall3)
+```
+
+```{r}
+auc3 <- roc(as.numeric(xgb_class_df$Real), as.numeric(xgb_class))
+auc3 <- auc3$auc
+```
+
+### d) Interpratetion
+
+The XGB model correctly classifies all instances of class 1 but fails to classify any instances of class 0.
+
+The overall accuracy is 57.14%, which is equivalent to the No Information Rate, suggesting the model is no better than a naive classifier.
+
+Sensitivity for class 0 is 0, indicating the model has no predictive power for class 0.
+
+Specificity for class 1 is 1, indicating perfect predictive power for class 1.
+
+Overall, the model is heavily biased towards predicting class 1 and fails to detect class 0, resulting in a highly imbalanced performance.
+
+------------------------------------------------------------------------
+
+# 5. Interpretation of the results
+
+After implementing the machine learning algorithms and evaluating their performance, we can interpret the results to draw conclusions about the effectiveness of each model in predicting the target variable, which indicates whether an individual has a family history of overweight.
+
+## Summary of Results
+
+Here's a summary of the performance metrics for each model:
+
+### Logistic Regression
+
+-   Accuracy: `r accuracy1`
+-   Precision: `r precision1`
+-   Recall: `r recall1`
+-   F1-score: `r f1_score1`
+-   AUC-ROC: `r auc1$auc`
+
+### Random Forest Classifier
+
+-   Accuracy: `r conf_matrix2$overall['Accuracy']`
+-   Precision: `r conf_matrix2$byClass["Pos Pred Value"]`
+-   Recall: `r conf_matrix2$byClass["Sensitivity"]`
+
+```{r, echo=FALSE}
+precision2 <- conf_matrix2$byClass["Pos Pred Value"]
+recall2 <- conf_matrix2$byClass["Sensitivity"]
+```
+
+-   F1-score: `r (2 * (precision2 * recall2)) / (precision2 + recall2)`
+-   AUC-ROC: `r auc2`
+
+### XGBoost Classifier
+
+-   Accuracy: `r accuracy3`
+-   Precision: `r precision3`
+-   Recall: `r recall3`
+-   F1-score: `r f1_score3`
+-   AUC-ROC: `r auc3`
+
+------------------------------------------------------------------------
+
+| Model | Accuracy | Precision | Recall | F1-score | AUC-ROC |
+|-----------|-----------|-----------|-----------|------------------|-----------|
+| Logistic Regression | `r accuracy1` | `r precision1` | `r recall1` | `r f1_score1` | `r auc1$auc` |
+| Random Forest Classifier | `r conf_matrix2$overall['Accuracy']` | `r precision2` | `r recall2` | `r (2 * (precision2 * recall2)) / (precision2 + recall2)` | `r auc2` |
+| XGBoost Classifier | `r accuracy3` | `r precision3` | `r recall3` | `r f1_score3` | `r auc3` |
+
+## Model choice
+
+The table compares the performance of three machine learning models: Logistic Regression, Random Forest Classifier, and XGBoost Classifier. Random Forest Classifier has the highest accuracy (0.9444314), precision (0.9427313), recall (0.9264069), and F1-score (0.9344978), indicating its superior performance in correctly identifying both positive and negative cases. Logistic Regression also performs well with high accuracy (0.8534323) and balanced precision and recall. XGBoost Classifier, however, has a significantly lower accuracy (0.5714286) and recall (0), making it less reliable.
+
+Based on these results, the Random Forest model appears to be the wisest choice, offering the best balance between precision, recall, and AUC-ROC, as well as excellent overall performance in terms of accuracy.
+
+In conclusion, the **Random Forest model** stands out as the optimal choice among the three evaluated models. Its outstanding overall performance, particularly in terms of accuracy, precision, recall, and AUC-ROC, make it a reliable tool for classifying this dataset. Its high F1-score also confirms its ability to maintain a balance between precision and recall, which is crucial for effective classification tasks. Thus, for this specific scenario, the Random Forest model appears to be the most suitable solution for predicting the presence of a family history of overweight.
+
+------------------------------------------------------------------------
+
+# Conclusion
+
+In conclusion, this analysis explores different classification models to predict family history of overweight based on features such as weight, age, gender, and dietary habits. Logistic, random forest, and XGBoost models achieve excellent performance, with weight, age, and consumption of high-calorie foods emerging as the most important variables.
+
+Comparing performances, the random forest model stands out as the optimal choice, offering the best balance between precision, recall, and AUC-ROC, as well as excellent overall precision performance. Its high F1 score also confirms its ability to maintain a balance between precision and recall, crucial for effective classification.
+
+These results can help better understand factors influencing overweight and develop targeted prevention strategies.
