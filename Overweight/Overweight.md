@@ -1,6 +1,16 @@
 # Classification Models for Family History of Overweight 🧮
 
-## Description
+#### Structure of the project
+```
+Overweight/
+   - Overweight.md : Documentation of the project
+   - Overw.R : R script containing model implementing steps
+   - Ovwght.qmd : A Quarto Document version of the R script
+```
+
+Link to the Notebook: [https://aurvl.github.io/NotebookSites/ovwg/Ovwght.html](https://aurvl.github.io/NotebookSites/ovwg/Ovwght.html)
+
+## Project Description
 
 This project explores the use of various classification models to predict whether an individual has a family history of overweight. Three different machine learning algorithms are implemented and evaluated: Logistic Regression, Random Forest Classifier, and XGBoost Classifier. The primary goal is to compare the performance of these models in terms of accuracy, precision, recall, F1-score, and AUC-ROC.
 
@@ -70,4 +80,4 @@ The analysis was performed using R with the following tools:
 
 The Random Forest model demonstrates superior performance across all metrics, including accuracy, precision, recall, and F1-score. The XGBoost Classifier, while having a high AUC-ROC, shows poor performance in terms of accuracy and recall, making it less reliable for this dataset.
 
-For detailed implementation and further analysis, refer to the Rmd scripts and results provided in this directory ([Overweight.Rmd](/Overweight/Overweight.Rmd) & download [Overweight.html](/Overweight/Overweight.html)).
+For detailed implementation and further analysis, refer to the Rmd scripts and results provided in this directory ([Overweight.Rmd](/Overweight/Overweight.Rmd)).

@@ -1,11 +1,11 @@
 ---
-title: "Overweight - Machine Learning Project"
+title: "Overweight Classification - Machine Learning Project"
 author: "Aurel VEHI"
-output:
-  html_document:
-    toc: true
-    fontsize: 11pt
-    css: style.css
+format:
+  html:
+     toc: true
+     toc-location: body
+editor: visual
 ---
 
 ------------------------------------------------------------------------
@@ -18,7 +18,7 @@ Today, obesity prevails more than underweight, highlighting its importance in th
 
 Given this information, it is logical to explore the relationship between obesity and family history. Thus, our study aims to develop a machine learning model capable of predicting whether an individual has a family history of obesity based on various individual characteristics. In this Notebook, we are going to present the results of our study.
 
-The methodology of the study is based on supervised machine learning techniques. We will use several machine learning models, such as logistic regression, random forest classifier, neural networks, and XGBoost.
+The methodology of the study is based on supervised machine learning techniques. We will use several machine learning models, such as logistic regression, random forest classifier and XGBoost.
 
 The data used comes from the GitHub platform and includes various information about individuals.
 
@@ -51,38 +51,25 @@ To carry out this study, we need R resources that we select and install. These a
 # install.packages("readr")
 # install.packages("data.table")
 # install.packages("stringr")
-# install.packages("lubridate")
-# install.packages("shiny")
 # install.packages("gridExtra")
 # install.packages("corrplot")
 # install.packages("caret")
-# install.packages("caTools")
 # install.packages("xgboost")
 # install.packages("randomForest")
-# install.packages("neuralnet")
-# install.packages("keras")
 # install.packages("xgboost")
-# install.packages("devtools")
-# install.packages("NeuralNetTools")
 
+library(gridExtra)
 library(dplyr)
 library(ggplot2)
 library(tidyr)
 library(readr)
 library(data.table)
 library(stringr)
-library(shiny)
-library(gridExtra)
 library(corrplot)
 library(caret)
-library(caTools)
 library(xgboost)
 library(randomForest)
-library(neuralnet)
-library(keras)
-library(xgboost)
-library(devtools)
-library(NeuralNetTools)
+library(pROC)
 ```
 
 Now that the packages are installed, we can start the work.
@@ -118,7 +105,7 @@ The dataframe is of size (2111 ; 17), which means it consists of 2111 rows (indi
 
 -   Weight: Weight in kg
 
--   family_history_with_overweight: Indicates if the person has a family history of overweight
+-   family_history_with_overweight: Indicates if the person has antecedent with overweight in his family
 
 -   FAVC: Indicates if the person tends to eat high-calorie food
 
@@ -165,10 +152,10 @@ We notice that there are no missing values in our dataframe. It is of fairly goo
 To get a first idea of the distribution of our variables and understand what they might reveal, we will plot graphs on certain variables. These graphs consist of scatter plots for numerical variables, bar charts for categorical variables, and other appropriate visualizations depending on the characteristics of each variable. This visual exploration step will help us detect trends, potential outliers, as well as patterns or correlations between variables.
 
 ```{r, echo=FALSE}
-p1 <- ggplot(data, aes(x = Age, y = Weight)) + geom_point(col = "black") + labs(title = "Age vs Weight") +
+p1 <- ggplot(data, aes(x = Age, y = Weight)) + geom_point(col = "green") + labs(title = "Age vs Weight") +
   theme(axis.text = element_text(size = 4), axis.title = element_text(size = 6))
 
-p2 <- ggplot(data, aes(x = Gender, y = Weight)) + geom_point(col = "#C40C0C") +  labs(title = "Gender vs Weight") +
+p2 <- ggplot(data, aes(x = Gender, y = Weight, fill = Gender)) + geom_boxplot() +  labs(title = "Weight Distribution by Gender") +
   theme(axis.text = element_text(size = 4), axis.title = element_text(size = 6))
 
 p3 <- ggplot(data, aes(x = Weight, y = Height)) + geom_point(col = "#8576FF") +  labs(title = "Weight vs Height") +
@@ -182,18 +169,20 @@ p5 <- ggplot(data, aes(x = Weight, y = FCVC)) + geom_point(col = "#FF76CE") +  l
 
 p6 <- ggplot(data, aes(x = Age, y = CH2O)) + geom_point(col = "#7ABA78") +  labs(title = "Age vs Water consumption") + theme(axis.text = element_text(size = 4), axis.title = element_text(size = 6))
 
-p7 <- ggplot(data, aes(x = Weight, y = SMOKE)) + geom_point(col = "#FF6500") +  labs(title = "Weight vs Smoke") +
+p7 <- ggplot(data, aes(x = SMOKE, y = Weight, fill = SMOKE)) + stat_summary(fun = "mean", geom = "col", color = "white") +
+  labs(title = "Weight vs Smoke") +
   theme(axis.text = element_text(size = 4), axis.title = element_text(size = 6))
 
-p8 <- ggplot(data, aes(x = Weight, y = CALC)) + geom_point(col = "#FF76CE") +  labs(title = "Weight vs CALC") + theme(axis.text = element_text(size = 4), axis.title = element_text(size = 6))
+p8 <- ggplot(data, aes(x = CALC, y = Weight, fill = CALC)) + geom_boxplot() +  labs(title = "Weight distribution by CALC") + theme(axis.text = element_text(size = 4), axis.title = element_text(size = 6))
 
-grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, ncol = 4)
+grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8)
 ```
 
 ```{r, echo=FALSE}
-data %>% ggplot(mapping = aes(x = Age, y = Weight, color = NObeyesdad)) + # More details on age vs weight
+data %>% ggplot(mapping = aes(x = Age, y = Weight, color = NObeyesdad)) +
   geom_point() + theme_bw() + theme(legend.position = "bottom") +
-  labs(title = "Age vs Weight", subtitle = "By Obesity level")
+  labs(title = "Age vs Weight", subtitle = "By Obesity level") +
+   theme_gray()
 ```
 
 Note that:
@@ -205,21 +194,6 @@ Note that:
 -   **WEIGHT vs HEIGHT**: There is a positive correlation, indicating that taller individuals tend to weigh more. This aligns with general biological expectations where height and weight are proportionately related.
 
 -   **WEIGHT vs ALCOHOL**: There are more people over 120kg among those who consume alcohol frequently.
-
-```{r, echo=FALSE}
-ggplot(data, aes(x = Age, y = NObeyesdad)) + geom_point(col = "#C40C0C") + labs(title = "Age vs NObeyesdad") +
-  theme(axis.text = element_text(size = 8), axis.title = element_text(size = 6))
-```
-
-The plot displays the relationship between `AGE` and `NObeyesdad`, categorizing individuals into different weight statuses: Insufficient_Weight, Normal_Weight, Overweight_Level_I, Overweight_Level_II, Obesity_Type_I, Obesity_Type_II, and Obesity_Type_III.
-
--   **Weight Status Trends**:
-
-    -   **Insufficient_Weight and Normal_Weight**: These categories are denser at younger ages (\< 25), suggesting that younger individuals are more likely to have insufficient or normal weight.
-
-    -   **Overweight and Obesity Levels:** As age increases, there is a notable presence of individuals in Overweight_Level_I, Overweight_Level_II, and the various Obesity categories. This indicates that the likelihood of being overweight or obese increases with age.
-
-    -   **Clustering Patterns:** The clustering of data points within each weight category suggests that age significantly impacts weight status, with older individuals more commonly found in higher weight categories.
 
 ```{r, echo=FALSE}
 ggplot(data, aes(x = Weight, y = family_history_with_overweight)) + geom_point(col = "black") + labs(title = "Weight vs family history with overweight") +
@@ -247,7 +221,7 @@ X <- data %>%
   select(Age, Height, Weight, FCVC, NCP, CH2O, FAF, TUE) # We select only numerical variables
 
 cor_mat <- cor(X) # Computing the correlation matrix of X
-corrplot(cor_mat, method = "color",col = COL2('PuOr'), tl.col ="black", tl.cex = 0.5) # And plot the correlation matrix
+corrplot(cor_mat, method = "color",col = COL2('PuOr'), tl.col ="purple", tl.cex = 0.5) # And plot the correlation matrix
 ```
 
 From the corrplot, we can see that quite a lot of our columns seem to be poorly correlated with one another. Generally when making a predictive model, it would be preferable to train a model with features that are not too correlated with one another feature.
@@ -327,9 +301,6 @@ X3 <- X3 %>%
          FAVC = ifelse(FAVC == "yes", 1, 0),
          SMOKE = ifelse(SMOKE == "yes", 1, 0),
          SCC = ifelse(SCC == "yes", 1, 0))
-
-X3$fhwo <- factor(X3$fhwo) # We convert the target variable to factor (dummy)
-
 head(X3)
 ```
 
@@ -338,7 +309,7 @@ Finally, we combine the 3 dataframes using the `cbind()` function to create `dat
 ```{r}
 attach(data)
 data_final <- cbind(X1, X3, X2) # Combining all df & the target variable to create the final one
-head(data_final[, 1:14]) # preview the first observations of the first columns of our final dataset
+head(data_final[, 1:14]) # preview the first observations of the 14 first columns of our final dataset
 ```
 
 **Description of the new dataframe**
@@ -347,13 +318,15 @@ head(data_final[, 1:14]) # preview the first observations of the first columns o
 dim(data_final)
 ```
 
-It is a dataframe of size (2111, 30). It now contains 30 variables.
+It is a dataframe of size (2111, 30). It now contains 30 variables on 2111 individuals.
 
 **Target variable**
 
 ```{r, message=FALSE, warning=FALSE}
-proportions(summary(data_final$fhwo)) # Proportions in the target variable
+summary(data_final$fhwo) # Proportions in the target variable
 ```
+
+In average 81% of individuals have antecendent with overweight (`fhwo = 1`).
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(data_final, aes(x = fhwo)) +
@@ -366,7 +339,7 @@ ggplot(data_final, aes(x = fhwo)) +
             stat = "count", 
             position = position_dodge(width = 0.9), 
             vjust = -0.25, size = 3, fontface = "bold", color = "black") +
-  scale_fill_brewer(palette = "Set3")
+  scale_fill_brewer(palette = "Set3") + theme_gray()
 ```
 
 The target variable shows some asymmetry in its distribution, as can be seen above.
@@ -394,6 +367,7 @@ Then, we perform oversampling using the `SMOTE()` function from this package, an
 
 ```{r, message=FALSE, warning=FALSE}
 set.seed(123)
+data_final$fhwo <- as.factor(data_final$fhwo) # We convert the target as factor for oversampling
 ovs_data <- SMOTE(fhwo ~ ., data = data_final) # New oversampled dataset
 attach(ovs_data)
 ```
@@ -449,7 +423,7 @@ Our data has been successfully split, it is time to build our models.
 
 As indicated in the introduction of this notebook, we aim to predict the `fhwo` variable, which indicates whether a person has a family history of overweight. This variable is binary, so we need to use supervised machine learning models of the classification type.
 
-With this in mind, we have chosen to evaluate and contrast the performance of 4 different classification models: *logistic regression, Random Forest Classifier, and Neural Network*. These models will be used to predict our target variable. Each model was trained on the training dataset and evaluated on the test dataset using metrics such as accuracy, precision, recall, F1-score, etc. These metrics will provide a comprehensive assessment of the model's performance in predicting our target variable.
+With this in mind, we have chosen to evaluate and contrast the performance of 4 different classification models: *logistic regression, Random Forest Classifier*, and *XGBoost*. These models will be used to predict our target variable. Each model was trained on the training dataset and evaluated on the test dataset using metrics such as accuracy, precision, recall, F1-score, etc. These metrics will provide a comprehensive assessment of the model's performance in predicting our target variable.
 
 ------------------------------------------------------------------------
 
@@ -492,6 +466,8 @@ final_dataset <- cbind(Real = test_set$fhwo, Predicted = reg_class)
 final_dataset <- as.data.frame(final_dataset)
 head(final_dataset)
 ```
+
+Where 1 = fwho : "no" and 2 = fwho : "yes"
 
 ### c) Performance Evaluation
 
@@ -605,13 +581,24 @@ Type of Random Forest: It is a classification random forest, meaning it is used 
 
 Variables at Each Split: At each split in the decision trees, the algorithm tried 5 randomly selected variables.
 
--   **Plotting the model**
+-   **Plotting the model Out-of-Bag (OOB)** **errors**
 
 ```{r}
 plot(classifier_RF, main = 'RF Classifier')
+legend("topright", 
+       legend = c("Global OOB error", "Error for class 0", "Error for class 1"),
+       col = c("black", "red", "green"),
+       lty = 1,
+       cex = 0.8)
 ```
 
 This graph shows the error rate of a Random Forest (RF) classifier as a function of the number of trees.
+
+-   *Red curve* : Error for class 0 (fhwo : "no")
+
+-   *Green curve* : Error for class 1 (fhwo : "yes")
+
+-   *Black curve* : Global error
 
 The error rate decreases rapidly as the number of trees increases initially, then tends to stabilize.
 
@@ -628,8 +615,6 @@ The error rate decreases rapidly as the number of trees increases initially, the
 -   The hardest class (red curve) stabilizes its error around 0.12 after about 100 trees.
 
 -   The easiest class (green curve) stabilizes its error around 0.02 very quickly.
-
-<!-- -->
 
 -   *Model Efficiency*: The model performs well as the average error remains low after a certain number of trees.
 
@@ -662,7 +647,7 @@ Overall, the Mean Decrease Gini values provide insights into the relative import
 We can visualize the importance of the 10 first features :
 
 ```{r}
-varImpPlot(classifier_RF, n.var = 10, main = "Random Forest Feature Importance", col = "#9365DB", pch = 16)
+varImpPlot(classifier_RF, n.var = 15, main = "Random Forest Feature Importance", col = "#9365DB", pch = 16)
 ```
 
 We can also observe the relationship between the `Weight` variable and the prediction
@@ -677,7 +662,7 @@ We evaluate the performance of the model by predicting the `target_test` set usi
 
 ```{r}
 # Predicting the Test set results 
-RF_class = predict(classifier_RF, newdata = features_test, )
+RF_class = predict(classifier_RF, newdata = features_test)
 ```
 
 -   **Confusion Matrix**
@@ -695,7 +680,7 @@ Comparing the model's performance against a baseline, represented by the No Info
 
 Additional metrics such as sensitivity (92.64%) and specificity (95.78%) provide insights into the model's ability to correctly identify positive and negative instances, respectively. The positive predictive value (PPV) and negative predictive value (NPV) stand at 94.27% and 94.55%, respectively, further demonstrating the model's reliability in making correct classifications across different classes.
 
-With a prevalence rate of 42.86%, the model achieves a detection rate of 39.70% and a detection prevalence of 42.12%. These metrics shed light on the model's ability to detect instances of interest within the dataset.
+With a prevalence rate of 42.12%, the model achieves a detection rate of 39.7%. These metrics shed light on the model's ability to detect instances of interest within the dataset.
 
 In summary, the balanced accuracy of 94.21% and the comprehensive array of metrics presented in the confusion matrix highlight the robustness and effectiveness of the classifier model in accurately classifying instances within the dataset.
 
@@ -703,7 +688,7 @@ In summary, the balanced accuracy of 94.21% and the comprehensive array of metri
 
 The AUC-ROC of the model is:
 
-```{r}
+```{r message=FALSE}
 auc2 <- roc(target_test, as.numeric(RF_class))
 auc2 <- auc2$auc
 auc2
@@ -757,7 +742,7 @@ Overall, this table helps identify which features are most influential in the mo
 
 ```{r}
 # Plot the feature importances
-xgb.plot.importance(importance_matrix, left_margin = 8, main = 'XGBoost Feature Importances')
+xgb.plot.importance(importance_matrix, left_margin = 8, main = 'XGBoost Feature Importances', col='blue')
 ```
 
 ### b) Predictions
@@ -783,26 +768,24 @@ conf_matrix3 <- confusionMatrix(as.factor(xgb_class_df$Predicted), as.factor(xgb
 conf_matrix3
 ```
 
-```{r}
+```{r, echo=FALSE}
 # Print accuracy
 accuracy3 <- conf_matrix3$overall['Accuracy']
-accuracy3
 ```
 
-```{r}
+```{r echo=FALSE}
 precision3 <- conf_matrix3$byClass["Pos Pred Value"]
 ```
 
-```{r}
+```{r echo=FALSE}
 recall3 <- conf_matrix3$byClass["Sensitivity"]
-recall3
 ```
 
-```{r}
+```{r echo=FALSE}
 f1_score3 <- 2 * (precision3 * recall3) / (precision3 + recall3)
 ```
 
-```{r}
+```{r echo=FALSE, message=FALSE}
 auc3 <- roc(as.numeric(xgb_class_df$Real), as.numeric(xgb_class))
 auc3 <- auc3$auc
 ```
@@ -842,12 +825,10 @@ Here's a summary of the performance metrics for each model:
 -   Accuracy: `r conf_matrix2$overall['Accuracy']`
 -   Precision: `r conf_matrix2$byClass["Pos Pred Value"]`
 -   Recall: `r conf_matrix2$byClass["Sensitivity"]`
-
 ```{r, echo=FALSE}
 precision2 <- conf_matrix2$byClass["Pos Pred Value"]
 recall2 <- conf_matrix2$byClass["Sensitivity"]
 ```
-
 -   F1-score: `r (2 * (precision2 * recall2)) / (precision2 + recall2)`
 -   AUC-ROC: `r auc2`
 
@@ -862,7 +843,7 @@ recall2 <- conf_matrix2$byClass["Sensitivity"]
 ------------------------------------------------------------------------
 
 | Model | Accuracy | Precision | Recall | F1-score | AUC-ROC |
-|-----------|-----------|-----------|-----------|------------------|-----------|
+|------------|------------|------------|------------|------------|------------|
 | Logistic Regression | `r accuracy1` | `r precision1` | `r recall1` | `r f1_score1` | `r auc1$auc` |
 | Random Forest Classifier | `r conf_matrix2$overall['Accuracy']` | `r precision2` | `r recall2` | `r (2 * (precision2 * recall2)) / (precision2 + recall2)` | `r auc2` |
 | XGBoost Classifier | `r accuracy3` | `r precision3` | `r recall3` | `r f1_score3` | `r auc3` |
