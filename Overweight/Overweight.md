@@ -3,9 +3,9 @@
 #### Structure of the project
 ```
 Overweight/
-   |- Overweight.md : Documentation of the project
-   |- Overw.R : R script containing model implementing steps
-   |- Ovwght.qmd : A Quarto Document version of the R script
+   ├── Overweight.md : Documentation of the project
+   └── Overw.R : R script containing model implementing steps
+   └── Ovwght.qmd : A Quarto Document version of the R script
 ```
 
 Link to the Notebook: [https://aurvl.github.io/NotebookSites/ovwg/Ovwght.html](https://aurvl.github.io/NotebookSites/ovwg/Ovwght.html)
