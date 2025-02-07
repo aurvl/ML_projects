@@ -1,0 +1,11 @@
+,Numero,Score_out_sample,Moy_score_cv,Std_score_cv,Features
+1658,2984,0.333907783035885,0.31277386467841073,0.02830014696920412,company_location - work_year experience_level_SE - company_location job_groups_Scientist - employment_type_FT job_groups_Engineer
+1088,1457,0.3279922667342985,0.36159857610776214,0.026544422772205516,company_location - job_title experience_level_SE - work_year experience_level_EX - company_location job_groups_Scientist
+1261,1630,0.3273925829566542,0.3276809161702102,0.024036251331976434,company_location - job_title experience_level_SE - company_location job_groups_Scientist - employment_type_FT job_groups_Engineer
+1657,2982,0.3273480967278556,0.30731739480762077,0.02995501025111421,company_location - work_year experience_level_SE - company_location job_groups_Scientist - company_size_M job_groups_Engineer
+1510,2536,0.32565182106125934,0.33224107129596536,0.02960581114194986,company_location - work_year experience_level_EX - work_year experience_level_SE - company_location job_groups_Scientist
+1259,1628,0.32390584624977514,0.3244627498257652,0.02572555620315728,company_location - job_title experience_level_SE - company_location job_groups_Scientist - company_size_M job_groups_Engineer
+1182,1551,0.32356820145682774,0.3649611923341916,0.021114968612438254,company_location - job_title experience_level_SE - company_location experience_level_EX - company_location job_groups_Scientist
+1028,1397,0.32351338924724304,0.3553573725203313,0.03196695874147462,company_location - job_title experience_level_SE - work_year^2 - work_year experience_level_EX
+2016,3954,0.32349523390812884,0.31049999715926735,0.027322582965942428,company_location - company_location experience_level_SE - company_location job_groups_Scientist - employment_type_FT job_groups_Engineer
+1101,1470,0.3232671557204364,0.35829348044870457,0.02934984083063536,company_location - job_title experience_level_SE - work_year experience_level_EX - experience_level_MI job_groups_Scientist
