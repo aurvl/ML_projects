@@ -31,6 +31,7 @@ Ce projet vise à prédire les salaires en utilisant des modèles d’apprentiss
 -   `res.csv` : Contient les meilleures combinaisons de variables pour la régression linéaire, basées sur l’optimisation.
 -   `rapport.pdf` : Documentation de la méthodologie, des expériences et des résultats du projet.
 -   `requirements.txt` : Liste des bibliothèques Python nécessaires et leurs versions.
+-   `eda.ipynb` : Contient l'analyse exploratoire des données
 -   `Readme.md` : Ce fichier, qui documente la structure et l’utilisation du projet.
 
 ------------------------------------------------------------------------
